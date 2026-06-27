@@ -22,17 +22,12 @@ export default function Signin({ onAuthSuccess, onToggleView }) {
                 password
             });
 
-            // Save JWT
-            localStorage.setItem("token", response.data.token);
 
-            // Save logged in user
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem("user", JSON.stringify(user));
 
             // Update App state
-            onAuthSuccess(response.data.user);
+            onAuthSuccess(user);
 
             alert("Login Successful");
 
