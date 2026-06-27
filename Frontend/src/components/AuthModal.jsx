@@ -52,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
                     throw new Error('Please enter a valid email address');
                 }
 
-                const res = await fetch('/api/auth/signup', {
+                const res = await fetch('http://127.0.0.1:5000/api/auth/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, address, password }),
@@ -70,7 +70,7 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
                 }, 1200);
             } else {
                 // Sign In
-                const res = await fetch('/api/auth/login', {
+                const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),

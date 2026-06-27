@@ -17,7 +17,7 @@ export default function LandingPage({ onOpenAuth, onSelectStoreToRate }) {
                 category: selectedCategory,
             }).toString();
 
-            const res = await fetch(`/api/stores?${q}`);
+            const res = await fetch(`http://127.0.0.1:5000/api/stores?${q}`);
             const data = await res.json();
             if (res.ok) {
                 setStores(data);

@@ -15,17 +15,14 @@ export default function App() {
 
   // Restore session from localStorage on mount
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('ratenest_session_user');
-      if (storedUser) {
-        setCurrentUser(JSON.parse(storedUser));
-        setCurrentTab('dashboard'); // Automatically take them to their workspace if logged in!
-      }
-    } catch (err) {
-      console.error('Error parsing stored session:', err);
-    }
-  }, []);
 
+    const user = localStorage.getItem("user");
+
+    if (user) {
+      setCurrentUser(JSON.parse(user));
+    }
+
+  }, []);
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
     localStorage.setItem('ratenest_session_user', JSON.stringify(user));
@@ -33,9 +30,13 @@ export default function App() {
   };
 
   const handleLogout = () => {
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
     setCurrentUser(null);
-    localStorage.removeItem('ratenest_session_user');
-    setCurrentTab('home');
+
+    setCurrentTab("home");
   };
 
   const handleOpenAuth = (view) => {

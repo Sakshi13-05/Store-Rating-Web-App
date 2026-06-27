@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import './Signin.css';
+import { login } from '../../services/authservice';
 
 export default function Signin({ onAuthSuccess, onToggleView }) {
     const [email, setEmail] = useState('');
@@ -9,30 +10,47 @@ export default function Signin({ onAuthSuccess, onToggleView }) {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSignin = async (e) => {
         e.preventDefault();
-        setError(null);
+
         setLoading(true);
 
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+
+            const response = await login({
+                email,
+                password
             });
 
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || 'Login failed');
-            }
+            // Save JWT
+            localStorage.setItem("token", response.data.token);
 
-            onAuthSuccess(data.user);
-        } catch (err) {
-            setError(err.message);
+            // Save logged in user
+            localStorage.setItem(
+                "user",
+                JSON.stringify(response.data.user)
+            );
+
+            // Update App state
+            onAuthSuccess(response.data.user);
+
+            alert("Login Successful");
+
+            // Close modal
+            onClose();
+
+        } catch (error) {
+
+            alert(
+                error.response?.data?.message ||
+                "Login Failed"
+            );
+
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="signin-container">
@@ -51,7 +69,7 @@ export default function Signin({ onAuthSuccess, onToggleView }) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="signin-form">
+                <form onSubmit={handleSignin} className="signin-form">
                     <div className="form-group">
                         <label className="form-label">Email Address</label>
                         <input
