@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import './Signup.css';
+import { signup } from '../../services/authservice';
 
 export default function Signup({ onAuthSuccess, onToggleView }) {
     // Form States
@@ -47,23 +48,19 @@ export default function Signup({ onAuthSuccess, onToggleView }) {
                 throw new Error('Please enter a valid email address');
             }
 
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, address, password }),
-            });
+            const res = await signup({ name, email, address, password });
 
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || 'Registration failed');
+            if (res.status !== 201 && res.status !== 200) {
+                throw new Error(res.data.message || 'Registration failed');
             }
 
             setSuccess('Account created successfully! Logging you in...');
             setTimeout(() => {
-                onAuthSuccess(data.user);
+                onAuthSuccess(res.data.user || {});
             }, 1200);
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err.response?.data?.message || err.message || 'Registration failed';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
