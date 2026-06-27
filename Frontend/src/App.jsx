@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+import AuthModal from './components/AuthModal';
+import LandingPage from './pages/Landing/LandingPage';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import UserDashboard from './pages/Users/UserDashboard';
+import OwnerDashboard from './pages/Owner/OwnerDashboard';
+import Footer from './components/Footer';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalInitialView, setAuthModalInitialView] = useState('signin');
+  const [currentTab, setCurrentTab] = useState('home'); // 'home' or 'dashboard'
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('ratenest_session_user');
+      if (storedUser) {
+        setCurrentUser(JSON.parse(storedUser));
+        setCurrentTab('dashboard'); // Automatically take them to their workspace if logged in!
+      }
+    } catch (err) {
+      console.error('Error parsing stored session:', err);
+    }
+  }, []);
+
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    localStorage.setItem('ratenest_session_user', JSON.stringify(user));
+    setCurrentTab('dashboard');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('ratenest_session_user');
+    setCurrentTab('home');
+  };
+
+  const handleOpenAuth = (view) => {
+    setAuthModalInitialView(view);
+    setAuthModalOpen(true);
+  };
+
+  const handleSelectStoreToRate = (storeId) => {
+    if (!currentUser) {
+      // Prompt auth first
+      handleOpenAuth('signin');
+    } else if (currentUser.role === 'user') {
+      // Take them to user dashboard to rate
+      setCurrentTab('dashboard');
+    } else {
+      // Admins or owners cannot rate directly as standard users, so we can notify them or show the view
+      setCurrentTab('dashboard');
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 selection:bg-amber-400 selection:text-slate-950">
 
-      <div className="ticks"></div>
+      {/* 1. Header */}
+      <Header
+        currentUser={currentUser}
+        onOpenAuth={handleOpenAuth}
+        onLogout={handleLogout}
+        onNavigateHome={() => setCurrentTab('home')}
+        onOpenDashboard={() => setCurrentTab('dashboard')}
+        currentTab={currentTab}
+      />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* 2. Main Body (Conditional routing) */}
+      <main className="flex-grow">
+        {currentTab === 'home' ? (
+          <LandingPage
+            onOpenAuth={handleOpenAuth}
+            onSelectStoreToRate={handleSelectStoreToRate}
+          />
+        ) : currentUser ? (
+          <>
+            {currentUser.role === 'admin' && <AdminDashboard onLogout={handleLogout} />}
+            {currentUser.role === 'user' && <UserDashboard currentUser={currentUser} onLogout={handleLogout} />}
+            {currentUser.role === 'owner' && <OwnerDashboard currentUser={currentUser} onLogout={handleLogout} />}
+          </>
+        ) : (
+          // Fallback if they are on dashboard view but not logged in
+          <div className="py-24 text-center space-y-4">
+            <p className="text-slate-500 font-mono text-xs">Please sign in to view your dashboard portal.</p>
+            <button
+              onClick={() => handleOpenAuth('signin')}
+              className="rounded-xl bg-amber-400 px-6 py-2.5 text-xs font-bold text-slate-950 hover:bg-amber-300 transition cursor-pointer"
+            >
+              Sign In Now
+            </button>
+          </div>
+        )}
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* 3. Footer */}
+      <Footer />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialView={authModalInitialView}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+    </div>
+  );
 }
-
-export default App

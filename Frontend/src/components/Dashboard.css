@@ -1,0 +1,17 @@
+/* src/components/Dashboard.css */
+.dashboard-wrapper {
+    width: 100%;
+}
+
+.dashboard-fallback {
+    padding-top: var(--space-24);
+    padding-bottom: var(--space-24);
+    text-align: center;
+}
+
+.dashboard-fallback-msg {
+    color: var(--color-slate-500);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    /* text-xs */
+}
