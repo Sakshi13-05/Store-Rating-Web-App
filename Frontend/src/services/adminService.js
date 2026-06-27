@@ -4,6 +4,6 @@ export const getDashboardStats = () => {
     return api.get("/admin/dashboard");
 };
 
-export const getAllUsers = () => {
-    return api.get("/admin/users");
+export const getAllUsers = (search = "", role = "") => {
+    return api.get(`/admin/users?search=${search}&role=${role}`);
 };

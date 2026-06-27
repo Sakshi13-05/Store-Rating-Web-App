@@ -6,6 +6,7 @@ import {
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
 import { getAllUsers } from '../../services/adminService';
+
 export default function AdminDashboard({ onLogout }) {
     // Stats
     const [stats, setStats] = useState({ totalUsers: 0, totalStores: 0, totalRatings: 0 });
@@ -54,8 +55,11 @@ export default function AdminDashboard({ onLogout }) {
     // fetchstats
     useEffect(() => {
         fetchStats();
-        fetchUsers();
+
     }, []);
+    useEffect(() => {
+        fetchUsers();
+    }, [userSearch, userRoleFilter]);
 
     const fetchStats = async () => {
         try {
@@ -70,7 +74,7 @@ export default function AdminDashboard({ onLogout }) {
 
     const fetchUsers = async () => {
         try {
-            const res = await getAllUsers();
+            const res = await getAllUsers(userSearch, userRoleFilter);
             setUsers(res.data);
         } catch (err) {
             console.log(err);

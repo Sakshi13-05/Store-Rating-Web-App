@@ -38,21 +38,34 @@ const getDashboardStats = (req, res) => {
 };
 
 const getAllUsers = (req, res) => {
-    const query = `
-        SELECT id, name, email, address, role
-        FROM users
-        ORDER BY created_at DESC
-    `;
+    const { search = "", role = "" } = req.query;
 
-    db.query(query, (err, result) => {
+    let query = `
+SELECT id, name, email, address, role
+FROM users
+WHERE
+(name LIKE ? OR email LIKE ? OR address LIKE ?)
+`;
+
+    const params = [
+        `%${search}%`,
+        `%${search}%`,
+        `%${search}%`
+    ];
+
+    if (role !== "") {
+        query += " AND role = ?";
+        params.push(role);
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    db.query(query, params, (err, result) => {
         if (err) {
-            return res.status(500).json({
-                message: "Database Error",
-                error: err,
-            });
+            return res.status(500).json(err);
         }
 
-        res.status(200).json(result);
+        res.json(result);
     });
 };
 module.exports = {
