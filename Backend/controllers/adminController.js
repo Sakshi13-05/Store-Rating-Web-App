@@ -37,6 +37,24 @@ const getDashboardStats = (req, res) => {
     );
 };
 
+const getAllUsers = (req, res) => {
+    const query = `
+        SELECT id, name, email, address, role
+        FROM users
+        ORDER BY created_at DESC
+    `;
+
+    db.query(query, (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                message: "Database Error",
+                error: err,
+            });
+        }
+
+        res.status(200).json(result);
+    });
+};
 module.exports = {
-    getDashboardStats,
+    getDashboardStats, getAllUsers
 };

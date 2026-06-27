@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
+import { getAllUsers } from '../../services/adminService';
 export default function AdminDashboard({ onLogout }) {
     // Stats
     const [stats, setStats] = useState({ totalUsers: 0, totalStores: 0, totalRatings: 0 });
@@ -53,6 +54,7 @@ export default function AdminDashboard({ onLogout }) {
     // fetchstats
     useEffect(() => {
         fetchStats();
+        fetchUsers();
     }, []);
 
     const fetchStats = async () => {
@@ -61,6 +63,15 @@ export default function AdminDashboard({ onLogout }) {
 
             setStats(res.data);
 
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const res = await getAllUsers();
+            setUsers(res.data);
         } catch (err) {
             console.log(err);
         }
