@@ -4,7 +4,7 @@ import {
     ArrowUp, ArrowDown, ChevronRight, X, Mail, MapPin, Briefcase, ShieldAlert
 } from 'lucide-react';
 import './AdminDashboard.css';
-
+import { getDashboardStats } from '../../services/adminService';
 export default function AdminDashboard({ onLogout }) {
     // Stats
     const [stats, setStats] = useState({ totalUsers: 0, totalStores: 0, totalRatings: 0 });
@@ -50,44 +50,21 @@ export default function AdminDashboard({ onLogout }) {
     const [formSuccess, setFormSuccess] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Fetch all listings and stats
-    const fetchData = async () => {
+    // fetchstats
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    const fetchStats = async () => {
         try {
-            const statsRes = await fetch('/api/stats');
-            const statsData = await statsRes.json();
-            setStats(statsData);
+            const res = await getDashboardStats();
 
-            // Build query string for users
-            const userQuery = new URLSearchParams({
-                search: userSearch,
-                role: userRoleFilter,
-                sortBy: userSortField,
-                sortOrder: userSortOrder,
-            }).toString();
-            const usersRes = await fetch(`/api/users?${userQuery}`);
-            const usersData = await usersRes.json();
-            setUsers(usersData);
+            setStats(res.data);
 
-            // Build query string for stores
-            const storeQuery = new URLSearchParams({
-                search: storeSearch,
-                sortBy: storeSortField,
-                sortOrder: storeSortOrder,
-            }).toString();
-            const storesRes = await fetch(`/api/stores?${storeQuery}`);
-            const storesData = await storesRes.json();
-            setStores(storesData);
         } catch (err) {
-            console.error('Error fetching admin data:', err);
+            console.log(err);
         }
     };
-
-    useEffect(() => {
-        fetchData();
-    }, [
-        userSearch, userRoleFilter, userSortField, userSortOrder,
-        storeSearch, storeSortField, storeSortOrder, activeTab
-    ]);
 
     // Handle Create User
     const handleCreateUser = async (e) => {
