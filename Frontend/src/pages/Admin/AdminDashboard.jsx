@@ -5,7 +5,8 @@ import {
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
-import { getAllUsers } from '../../services/adminService';
+import { getAllUsers, addUser } from '../../services/adminService';
+
 
 export default function AdminDashboard({ onLogout }) {
     // Stats
@@ -59,6 +60,7 @@ export default function AdminDashboard({ onLogout }) {
     }, []);
     useEffect(() => {
         fetchUsers();
+
     }, [userSearch, userRoleFilter]);
 
     const fetchStats = async () => {
@@ -82,42 +84,44 @@ export default function AdminDashboard({ onLogout }) {
     };
 
     // Handle Create User
-    const handleCreateUser = async (e) => {
+    const handleAddUser = async (e) => {
         e.preventDefault();
         setFormError(null);
         setFormSuccess(null);
         setLoading(true);
 
         try {
-            const res = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: uName,
-                    email: uEmail,
-                    address: uAddress,
-                    password: uPassword,
-                    role: uRole,
-                }),
-            });
+            // Construct payload from the actual form states
+            const payload = {
+                name: uName,
+                email: uEmail,
+                password: uPassword,
+                address: uAddress,
+                role: uRole,
+            };
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to create user');
+            const res = await addUser(payload);
 
-            setFormSuccess('User created successfully!');
+            setFormSuccess(res.data?.message || 'User created successfully!');
+
+            // Refresh counts and users list
+            fetchUsers();
+            fetchStats();
+
+            // Clear inputs and close modal after 1 second
             setTimeout(() => {
                 setShowAddUser(false);
-                // Clear fields
                 setUName('');
                 setUEmail('');
                 setUAddress('');
                 setUPassword('');
                 setURole('user');
                 setFormSuccess(null);
-                fetchData();
             }, 1000);
+
         } catch (err) {
-            setFormError(err.message);
+            const errMsg = err.response?.data?.message || err.message || "Something went wrong";
+            setFormError(errMsg);
         } finally {
             setLoading(false);
         }
@@ -155,7 +159,7 @@ export default function AdminDashboard({ onLogout }) {
                 setSCategory('Lifestyle & Home');
                 setSOwnerId('');
                 setFormSuccess(null);
-                fetchData();
+                fetchStats();
             }, 1000);
         } catch (err) {
             setFormError(err.message);
@@ -538,7 +542,8 @@ export default function AdminDashboard({ onLogout }) {
                                 </div>
                             )}
 
-                            <form onSubmit={handleCreateUser} className="signup-form">
+                            {/* Changed submission handler to handleAddUser */}
+                            <form onSubmit={handleAddUser} className="signup-form">
                                 <div className="form-group">
                                     <label className="form-label">
                                         Full Name (20 - 60 chars)

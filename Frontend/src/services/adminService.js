@@ -7,3 +7,7 @@ export const getDashboardStats = () => {
 export const getAllUsers = (search = "", role = "") => {
     return api.get(`/admin/users?search=${search}&role=${role}`);
 };
+
+export const addUser = (userData) => {
+    return api.post("/admin/users", userData);
+};
