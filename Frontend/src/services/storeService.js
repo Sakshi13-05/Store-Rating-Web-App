@@ -9,3 +9,9 @@ export const addStore = (storeData) => {
 export const getAllStores = (search = "", category = "all") => {
     return api.get(`/stores?search=${search}&category=${category}`);
 };
+
+export const assignStoreOwner = (storeId, ownerId) => {
+    return api.put(`/stores/${storeId}/owner`, {
+        ownerId,
+    });
+};

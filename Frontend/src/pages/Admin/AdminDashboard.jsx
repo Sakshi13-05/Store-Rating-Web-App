@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
-import { getAllUsers, addUser } from '../../services/adminService';
+import { getAllUsers, addUser, getOwners } from '../../services/adminService';
 import { addStore, getAllStores } from '../../services/storeService';
 
 
@@ -16,6 +16,7 @@ export default function AdminDashboard({ onLogout }) {
     // Listings
     const [users, setUsers] = useState([]);
     const [stores, setStores] = useState([]);
+    const [owners, setOwners] = useState([]);
 
     // Active View Tab: 'users' or 'stores'
     const [activeTab, setActiveTab] = useState('users');
@@ -58,7 +59,7 @@ export default function AdminDashboard({ onLogout }) {
     // fetchstats
     useEffect(() => {
         fetchStats();
-
+        fetchOwners();
     }, []);
     useEffect(() => {
         fetchUsers();
@@ -70,12 +71,32 @@ export default function AdminDashboard({ onLogout }) {
 
     }, [storeSearch, selectedCategory]);
 
+
+    // Assign Store Owner via standard fetch to bypass Vite compilation errors
+    const handleAssignOwner = async (storeId, ownerId) => {
+        try {
+            // Using direct fetch to match your backend API assignment path (adjust if necessary)
+            const res = await fetch(`/api/stores/${storeId}/owner`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ownerId })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || data.error || 'Something went wrong');
+
+            alert(data.message || 'Owner assigned successfully!');
+            fetchStores();
+
+        } catch (err) {
+            alert(err.message || "Something went wrong");
+        }
+    };
+
     const fetchStats = async () => {
         try {
             const res = await getDashboardStats();
-
             setStats(res.data);
-
         } catch (err) {
             console.log(err);
         }
@@ -117,7 +138,6 @@ export default function AdminDashboard({ onLogout }) {
             };
 
             const res = await addUser(payload);
-
             setFormSuccess(res.data?.message || 'User created successfully!');
 
             // Refresh counts and users list
@@ -146,13 +166,11 @@ export default function AdminDashboard({ onLogout }) {
     // Handle Create Store
     const handleAddStore = async (e) => {
         e.preventDefault();
-
         setFormError(null);
         setFormSuccess(null);
         setLoading(true);
 
         try {
-
             const storeData = {
                 name: sName,
                 email: sEmail,
@@ -161,10 +179,7 @@ export default function AdminDashboard({ onLogout }) {
                 ownerId: sOwnerId
             };
 
-            console.log(storeData);
-
             const res = await addStore(storeData);
-
             setFormSuccess(res.data.message);
 
             // Refresh store table
@@ -182,11 +197,7 @@ export default function AdminDashboard({ onLogout }) {
 
         } catch (err) {
             console.log("Full Error:", err);
-
             if (err.response) {
-                console.log("Status:", err.response.status);
-                console.log("Data:", err.response.data);
-
                 alert(
                     err.response.data.message ||
                     err.response.data.error ||
@@ -231,6 +242,21 @@ export default function AdminDashboard({ onLogout }) {
         if (user.role !== 'owner') return 'N/A';
         const store = stores.find((s) => s.ownerId === user.id || s.id === user.storeId);
         return store ? `${store.name} (${store.overallRating}★)` : 'No Store Assigned';
+    };
+
+    const fetchOwners = async () => {
+        try {
+            console.log("Fetching owners...");
+
+            const res = await getOwners();
+
+            console.log("Owners API Response:", res.data);
+
+            setOwners(res.data);
+
+        } catch (err) {
+            console.log(err);
+        }
     };
 
     return (
@@ -376,7 +402,7 @@ export default function AdminDashboard({ onLogout }) {
                                             </tr>
                                         ) : (
                                             users.map((user) => (
-                                                <tr key={user.id}>
+                                                <tr key={user.id || user._id}>
                                                     <td className="name">{user.name}</td>
                                                     <td className="email">{user.email}</td>
                                                     <td className="address">{user.address}</td>
@@ -434,21 +460,26 @@ export default function AdminDashboard({ onLogout }) {
                                             <th onClick={() => toggleStoreSort('email')} className="sortable">
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>Contact Email {getSortIcon('email', storeSortField, storeSortOrder)}</div>
                                             </th>
+                                            {/* Table head cleaned up to prevent ReferenceErrors */}
+                                            <th onClick={() => toggleStoreSort('owner')} className="sortable">
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>Owner {getSortIcon('owner', storeSortField, storeSortOrder)}</div>
+                                            </th>
                                             <th onClick={() => toggleStoreSort('overallRating')} className="sortable">
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>Rating {getSortIcon('overallRating', storeSortField, storeSortOrder)}</div>
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {/* Fallback changed to colSpan=6 to match layout columns */}
                                         {stores.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--color-slate-400)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                                                <td colSpan={6} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--color-slate-400)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
                                                     No stores found matching the filters.
                                                 </td>
                                             </tr>
                                         ) : (
                                             stores.map((store) => (
-                                                <tr key={store.id}>
+                                                <tr key={store.id || store._id}>
                                                     <td className="name">
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                             <span>{store.name}</span>
@@ -462,6 +493,26 @@ export default function AdminDashboard({ onLogout }) {
                                                     <td style={{ color: 'var(--color-slate-600)' }}>{store.category}</td>
                                                     <td className="address">{store.address}</td>
                                                     <td className="email">{store.email}</td>
+
+                                                    {/* Correct placement of your owner dropdown mapping */}
+                                                    <td>
+                                                        <select
+                                                            value={store.owner_id || store.ownerId || ""}
+                                                            onChange={(e) =>
+                                                                handleAssignOwner(store.id || store._id, e.target.value)
+                                                            }
+                                                        >
+                                                            <option value="">Select Owner</option>
+
+                                                            {/* Filtered directly from users array where role is owner */}
+                                                            {owners.map((owner) => (
+                                                                <option key={owner.id || owner._id} value={owner.id || owner._id}>
+                                                                    {owner.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+
                                                     <td>
                                                         <div className="admin-table-stars-row">
                                                             <Star className="star-filled" style={{ height: '16px', width: '16px' }} />

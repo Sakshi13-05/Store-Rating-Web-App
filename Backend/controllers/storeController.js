@@ -81,4 +81,35 @@ const getAllStores = (req, res) => {
         res.json(result);
     });
 };
-module.exports = { addStore, getAllStores };
+const assignStoreOwner = (req, res) => {
+
+    const { id } = req.params;
+    const { ownerId } = req.body;
+
+    if (!ownerId) {
+        return res.status(400).json({
+            message: "Owner is required"
+        });
+    }
+
+    const query = `
+        UPDATE stores
+        SET owner_id = ?
+        WHERE id = ?
+    `;
+
+    db.query(query, [ownerId, id], (err, result) => {
+
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+
+        res.json({
+            message: "Store Owner Assigned Successfully"
+        });
+
+    });
+
+};
+module.exports = { addStore, getAllStores, assignStoreOwner };

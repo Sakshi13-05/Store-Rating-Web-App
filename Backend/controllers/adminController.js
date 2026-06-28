@@ -129,6 +129,24 @@ const addUser = (req, res) => {
     }
 
 }
+const getOwners = (req, res) => {
+
+    const query = `
+        SELECT id, name
+        FROM users
+        WHERE role = 'owner'
+        ORDER BY name ASC
+    `;
+
+    db.query(query, (err, result) => {
+        if (err) {
+            return res.status(500).json(err);
+        }
+
+        res.json(result);
+    });
+
+};
 module.exports = {
-    getDashboardStats, getAllUsers, addUser,
+    getDashboardStats, getAllUsers, addUser, getOwners,
 };
