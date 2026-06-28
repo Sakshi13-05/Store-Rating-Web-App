@@ -6,6 +6,7 @@ import {
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
 import { getAllUsers, addUser } from '../../services/adminService';
+import { addStore, getAllStores } from '../../services/storeService';
 
 
 export default function AdminDashboard({ onLogout }) {
@@ -63,6 +64,11 @@ export default function AdminDashboard({ onLogout }) {
 
     }, [userSearch, userRoleFilter]);
 
+    useEffect(() => {
+        fetchStores();
+
+    }, []);
+
     const fetchStats = async () => {
         try {
             const res = await getDashboardStats();
@@ -80,6 +86,15 @@ export default function AdminDashboard({ onLogout }) {
             setUsers(res.data);
         } catch (err) {
             console.log(err);
+        }
+    };
+
+    const fetchStores = async () => {
+        try {
+            const res = await getAllStores();
+            setStores(res.data);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -128,45 +143,62 @@ export default function AdminDashboard({ onLogout }) {
     };
 
     // Handle Create Store
-    const handleCreateStore = async (e) => {
+    const handleAddStore = async (e) => {
         e.preventDefault();
+
         setFormError(null);
         setFormSuccess(null);
         setLoading(true);
 
         try {
-            const res = await fetch('/api/stores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: sName,
-                    email: sEmail,
-                    address: sAddress,
-                    category: sCategory,
-                    ownerId: sOwnerId || undefined,
-                }),
-            });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to create store');
+            const storeData = {
+                name: sName,
+                email: sEmail,
+                address: sAddress,
+                category: sCategory,
+                ownerId: sOwnerId
+            };
 
-            setFormSuccess('Store created successfully!');
-            setTimeout(() => {
-                setShowAddStore(false);
-                setSName('');
-                setSEmail('');
-                setSAddress('');
-                setSCategory('Lifestyle & Home');
-                setSOwnerId('');
-                setFormSuccess(null);
-                fetchStats();
-            }, 1000);
+            console.log(storeData);
+
+            const res = await addStore(storeData);
+
+            setFormSuccess(res.data.message);
+
+            // Refresh store table
+            fetchStores();
+
+            // Clear form
+            setSName("");
+            setSEmail("");
+            setSAddress("");
+            setSCategory("Lifestyle & Home");
+            setSOwnerId("");
+
+            // Close modal (if you're using one)
+            setShowAddStore(false);
+
         } catch (err) {
-            setFormError(err.message);
+            console.log("Full Error:", err);
+
+            if (err.response) {
+                console.log("Status:", err.response.status);
+                console.log("Data:", err.response.data);
+
+                alert(
+                    err.response.data.message ||
+                    err.response.data.error ||
+                    JSON.stringify(err.response.data)
+                );
+            } else {
+                alert(err.message);
+            }
         } finally {
             setLoading(false);
         }
     };
+
 
     const toggleUserSort = (field) => {
         if (userSortField === field) {
@@ -307,7 +339,7 @@ export default function AdminDashboard({ onLogout }) {
                                     onChange={(e) => setUserRoleFilter(e.target.value)}
                                     className="admin-filter-dropdown"
                                 >
-                                    <option value="all">All Roles</option>
+                                    <option value="">All Roles</option>
                                     <option value="admin">System Admin</option>
                                     <option value="user">Normal User</option>
                                     <option value="owner">Store Owner</option>
@@ -657,7 +689,7 @@ export default function AdminDashboard({ onLogout }) {
                                 </div>
                             )}
 
-                            <form onSubmit={handleCreateStore} className="signup-form">
+                            <form onSubmit={handleAddStore} className="signup-form">
                                 <div className="form-group">
                                     <label className="form-label">
                                         Store Name
