@@ -26,9 +26,10 @@ export default function AdminDashboard({ onLogout }) {
     const [userSortField, setUserSortField] = useState('name');
     const [userSortOrder, setUserSortOrder] = useState('asc');
 
-    const [storeSearch, setStoreSearch] = useState('');
+    const [storeSearch, setStoreSearch] = useState("");
     const [storeSortField, setStoreSortField] = useState('name');
     const [storeSortOrder, setStoreSortOrder] = useState('asc');
+    const [selectedCategory, setSelectedCategory] = useState("all");
 
     // Form Modals
     const [showAddUser, setShowAddUser] = useState(false);
@@ -67,7 +68,7 @@ export default function AdminDashboard({ onLogout }) {
     useEffect(() => {
         fetchStores();
 
-    }, []);
+    }, [storeSearch, selectedCategory]);
 
     const fetchStats = async () => {
         try {
@@ -91,7 +92,7 @@ export default function AdminDashboard({ onLogout }) {
 
     const fetchStores = async () => {
         try {
-            const res = await getAllStores();
+            const res = await getAllStores(storeSearch, selectedCategory);
             setStores(res.data);
         } catch (err) {
             console.error(err);

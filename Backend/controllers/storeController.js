@@ -58,10 +58,12 @@ const getAllStores = (req, res) => {
     let query = `
         SELECT *
         FROM stores
-        WHERE (name LIKE ? OR address LIKE ?)
+        WHERE
+        (name LIKE ? OR email LIKE ? OR address LIKE ?)
     `;
 
     const params = [
+        `%${search}%`,
         `%${search}%`,
         `%${search}%`
     ];
@@ -74,13 +76,9 @@ const getAllStores = (req, res) => {
     query += " ORDER BY created_at DESC";
 
     db.query(query, params, (err, result) => {
-        if (err) {
-            return res.status(500).json(err);
-        }
+        if (err) return res.status(500).json(err);
 
         res.json(result);
     });
-
 };
-
 module.exports = { addStore, getAllStores };
