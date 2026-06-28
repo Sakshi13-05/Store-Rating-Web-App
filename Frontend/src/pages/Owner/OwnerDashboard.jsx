@@ -4,7 +4,7 @@ import {
     Check, AlertCircle, Eye, EyeOff, Mail, MapPin, Briefcase,
     Calendar, Award, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw, BarChart3
 } from 'lucide-react';
-
+import * as ownerService from '../../services/ownerService';
 import './OwnerDashboard.css';
 
 export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) {
@@ -52,7 +52,7 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
 
             // We load all endpoints concurrently
             const [dbData, storeData, ratingsData, summaryData] = await Promise.all([
-                ownerService.getDashboard(currentUser.id).catch(() => ({
+                ownerService.getOwnerDashboard(currentUser.id).catch(() => ({
                     storeName: 'Unassigned Store',
                     averageRating: 0,
                     totalRatings: 0,
@@ -64,7 +64,7 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
             ]);
 
             setDashboard(dbData);
-            setStore(storeData);
+            setStore(storeData || { name: dbData?.storeName, category: dbData?.category, address: dbData?.address, ownerName: currentUser?.name });
             setRatings(ratingsData);
             setSummary(summaryData);
 
@@ -214,7 +214,7 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
 
     const processedRatings = getFilteredAndSortedRatings();
     const recentRatings = [...ratings]
-        .sort((a, b) => new Date(b.date || b.createdAt || 0).getTime() - new Date(a.date || a.createdAt || 0).getTime())
+        .sort((a, b) => new Date(b.date || b.created_at || b.createdAt || 0).getTime() - new Date(a.date || a.created_at || a.createdAt || 0).getTime())
         .slice(0, 5);
 
     if (loading) {
@@ -389,7 +389,7 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
                                         </div>
                                         <div className="metric-data">
                                             <span className="metric-label">Store Joined Date</span>
-                                            <h3 className="metric-value-text">{formatDate(dashboard?.createdAt)}</h3>
+                                            <h3 className="metric-value-text">{formatDate(dashboard?.created_at || dashboard?.createdAt)}</h3>
                                         </div>
                                     </div>
                                 </div>
