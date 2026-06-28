@@ -23,6 +23,7 @@ export default function Signin({ onAuthSuccess, onToggleView }) {
             });
 
 
+            const user = response.data.user;
             localStorage.setItem("token", response.data.token);
             localStorage.setItem("user", JSON.stringify(user));
 

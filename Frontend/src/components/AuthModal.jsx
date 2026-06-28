@@ -60,13 +60,12 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
 
                 const data = await res.json();
                 if (!res.ok) {
-                    throw new Error(data.error || 'Registration failed');
+                    throw new Error(data.message || 'Registration failed');
                 }
 
-                setSuccess('Account created successfully! Logging you in...');
+                setSuccess('Account created successfully! Please log in.');
                 setTimeout(() => {
-                    onAuthSuccess(data.user);
-                    onClose();
+                    setView('signin');
                 }, 1200);
             } else {
                 // Sign In
@@ -78,8 +77,11 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
 
                 const data = await res.json();
                 if (!res.ok) {
-                    throw new Error(data.error || 'Login failed');
+                    throw new Error(data.message || 'Login failed');
                 }
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("user", JSON.stringify(data.user));
 
                 onAuthSuccess(data.user);
                 onClose();

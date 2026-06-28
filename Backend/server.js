@@ -18,6 +18,9 @@ app.use("/api/admin", adminRoutes);
 const storeRoutes = require("./routes/storeRoutes");
 app.use("/api/stores", storeRoutes);
 
+const ownerRoutes = require("./routes/ownerRoutes");
+app.use("/api/owner", ownerRoutes);
+
 app.get("/", (req, res) => {
     res.send("Bkend running");
 });
