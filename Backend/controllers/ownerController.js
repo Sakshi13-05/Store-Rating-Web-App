@@ -4,46 +4,59 @@ const getOwnerDashboard = (req, res) => {
 
     const ownerId = req.user.id;
 
-    const query = ` SELECT
-    s.id,
-    s.name AS storeName,
-    s.category,
-    s.address,
-    s.created_at,
+    const storeQuery = `
+        SELECT
+            s.id,
+            s.name AS storeName,
+            s.category,
+            s.address,
+            s.created_at,
+            IFNULL(ROUND(AVG(r.rating), 1), 0) AS averageRating,
+            COUNT(r.id) AS totalRatings
+        FROM stores s
+        LEFT JOIN ratings r ON s.id = r.store_id
+        WHERE s.owner_id = ?
+        GROUP BY s.id, s.name, s.category, s.address, s.created_at
+    `;
 
-    IFNULL(ROUND(AVG(r.rating), 1), 0) AS averageRating,
-    COUNT(r.id) AS totalRatings
-
-FROM stores s
-
-LEFT JOIN ratings r
-ON s.id = r.store_id
-
-WHERE s.owner_id = ?
-
-GROUP BY
-    s.id,
-    s.name,
-    s.category,
-    s.address,
-    s.created_at`;
-
-    db.query(query, [ownerId], (err, result) => {
+    db.query(storeQuery, [ownerId], (err, result) => {
 
         if (err) {
-            return res.status(500).json({
-                message: "Database Error",
-                error: err
-            });
+            return res.status(500).json({ message: "Database Error", error: err });
         }
 
         if (result.length === 0) {
-            return res.status(404).json({
-                message: "No store assigned to this owner."
-            });
+            return res.status(404).json({ message: "No store assigned to this owner." });
         }
 
-        res.status(200).json(result[0]);
+        const storeData = result[0];
+        const storeId = storeData.id;
+
+        const distributionQuery = `
+            SELECT rating, COUNT(*) AS total
+            FROM ratings
+            WHERE store_id = ?
+            GROUP BY rating
+        `;
+
+        db.query(distributionQuery, [storeId], (err2, distributionResult) => {
+
+            if (err2) {
+                return res.status(500).json(err2);
+            }
+
+            const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+            distributionResult.forEach(item => {
+                distribution[item.rating] = item.total;
+            });
+
+            return res.status(200).json({
+                ...storeData,
+                distribution
+            });
+
+        });
 
     });
 

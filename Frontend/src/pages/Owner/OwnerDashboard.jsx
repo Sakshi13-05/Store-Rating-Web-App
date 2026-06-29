@@ -43,6 +43,8 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
     const isPassUpper = /[A-Z]/.test(newPassword);
     const isPassSpecial = /[^A-Za-z0-9]/.test(newPassword);
 
+    const distribution = dashboard?.distribution || {};
+
     // Load All Data on Mount & Refresh
     const loadAllData = async () => {
         if (!currentUser?.id) return;
@@ -70,9 +72,9 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
 
             // Prefill profile forms
             if (currentUser) {
-                setProfileName(currentUser.name);
-                setProfileEmail(currentUser.email);
-                setProfileAddress(currentUser.address);
+                setProfileName(currentUser.name || '');
+                setProfileEmail(currentUser.email || '');
+                setProfileAddress(currentUser.address || '');
             }
         } catch (err) {
             console.error('Error fetching portal data:', err);
@@ -407,26 +409,22 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
                                     </div>
 
                                     <div className="rating-summary-meter-box">
-                                        {[5, 4, 3, 2, 1].map((star) => {
-                                            const count = summary[star] || 0;
-                                            const total = dashboard?.totalRatings || 1;
-                                            const percentage = Math.min(100, Math.round((count / total) * 100));
-
-                                            return (
-                                                <div key={star} className="meter-row">
-                                                    <span className="star-label-text">{star}★</span>
-                                                    <div className="progress-bar-track">
-                                                        <div
-                                                            className={`progress-bar-fill star-color-${star}`}
-                                                            style={{ width: `${percentage}%` }}
-                                                        ></div>
-                                                    </div>
-                                                    <span className="count-label-text">
-                                                        {count.toLocaleString()} ({percentage}%)
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
+                                        {[5, 4, 3, 2, 1].map((star) => (
+                                            <div key={star} className="meter-row">
+                                                <span className="star-label-text">{star}★</span>
+                                                <progress
+                                                    className={`progress-bar-native star-color-${star}`}
+                                                    value={distribution[star] || 0}
+                                                    max={dashboard?.totalRatings || 1}
+                                                />
+                                                <span className="count-label-text">
+                                                    {distribution[star] || 0} (
+                                                    {dashboard?.totalRatings
+                                                        ? Math.round(((distribution[star] || 0) / dashboard.totalRatings) * 100)
+                                                        : 0}%)
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 
