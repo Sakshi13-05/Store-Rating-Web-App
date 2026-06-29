@@ -49,6 +49,63 @@ GROUP BY
 
 };
 
+const getRatings = (req, res) => {
+
+    const ownerId = req.user.id;
+
+    const {
+        search = "",
+        sort = "latest"
+    } = req.query;
+
+    let orderBy = "r.created_at DESC";
+
+    if (sort === "highest") {
+        orderBy = "r.rating DESC";
+    }
+
+    if (sort === "lowest") {
+        orderBy = "r.rating ASC";
+    }
+
+    const query = `
+        SELECT
+            r.id,
+            u.name AS customerName,
+            r.rating,
+            r.created_at
+
+        FROM ratings r
+
+        JOIN users u
+            ON r.user_id = u.id
+
+        JOIN stores s
+            ON r.store_id = s.id
+
+        WHERE
+            s.owner_id = ?
+            AND u.name LIKE ?
+
+        ORDER BY ${orderBy}
+    `;
+
+    db.query(
+        query,
+        [ownerId, `%${search}%`],
+        (err, result) => {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
+            res.json(result);
+
+        }
+    );
+
+};
+
 module.exports = {
-    getOwnerDashboard
+    getOwnerDashboard, getRatings
 };

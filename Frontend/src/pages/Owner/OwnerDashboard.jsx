@@ -52,15 +52,15 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
 
             // We load all endpoints concurrently
             const [dbData, storeData, ratingsData, summaryData] = await Promise.all([
-                ownerService.getOwnerDashboard(currentUser.id).catch(() => ({
+                ownerService.getOwnerDashboard().catch(() => ({
                     storeName: 'Unassigned Store',
                     averageRating: 0,
                     totalRatings: 0,
                     createdAt: 'N/A',
                 })),
-                ownerService.getStore(currentUser.id).catch(() => null),
-                ownerService.getRatings(currentUser.id).catch(() => []),
-                ownerService.getRatingSummary(currentUser.id).catch(() => ({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 })),
+                ownerService.getStore().catch(() => null),
+                ownerService.getRatings().catch(() => []),
+                ownerService.getRatingSummary().catch(() => ({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 })),
             ]);
 
             setDashboard(dbData);
