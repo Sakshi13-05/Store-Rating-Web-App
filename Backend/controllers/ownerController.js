@@ -86,6 +86,7 @@ const getRatings = (req, res) => {
         WHERE
             s.owner_id = ?
             AND u.name LIKE ?
+            AND u.role = 'user'
 
         ORDER BY ${orderBy}
     `;
