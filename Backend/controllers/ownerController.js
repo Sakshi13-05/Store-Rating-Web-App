@@ -8,6 +8,7 @@ const getOwnerDashboard = (req, res) => {
         SELECT
             s.id,
             s.name AS storeName,
+            s.email,
             s.category,
             s.address,
             s.created_at,
@@ -16,7 +17,7 @@ const getOwnerDashboard = (req, res) => {
         FROM stores s
         LEFT JOIN ratings r ON s.id = r.store_id
         WHERE s.owner_id = ?
-        GROUP BY s.id, s.name, s.category, s.address, s.created_at
+        GROUP BY s.id, s.name, s.email, s.category, s.address, s.created_at
     `;
 
     db.query(storeQuery, [ownerId], (err, result) => {

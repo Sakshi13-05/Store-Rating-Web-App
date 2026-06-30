@@ -96,18 +96,21 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
         setProfileLoading(true);
 
         try {
+            if (profileName.length < 20 || profileName.length > 60) {
+                throw new Error('Name must be 20 to 60 characters.');
+            }
+            if (profileAddress.length > 400) {
+                throw new Error('Address must be max 400 characters.');
+            }
+
             const res = await ownerService.updateProfile(currentUser.id, {
                 name: profileName,
-                email: profileEmail,
                 address: profileAddress,
             });
 
-            if (res.success && res.user) {
-                setProfileSuccess('Profile updated successfully!');
-                // Sync parent and localStorage session
-                if (onUpdateUser) {
-                    onUpdateUser(res.user);
-                }
+            setProfileSuccess('Profile updated successfully!');
+            if (onUpdateUser && res.user) {
+                onUpdateUser(res.user);
             }
         } catch (err) {
             setProfileError(err.response?.data?.error || err.message || 'Failed to update profile');
@@ -128,14 +131,12 @@ export default function OwnerDashboard({ currentUser, onLogout, onUpdateUser }) 
                 throw new Error('Password does not satisfy validation rules');
             }
 
-            const res = await ownerService.changePassword(currentUser.id, {
+            await ownerService.changePassword(currentUser.id, {
                 password: newPassword,
             });
 
-            if (res.success) {
-                setPwSuccess('Password changed successfully!');
-                setNewPassword('');
-            }
+            setPwSuccess('Password changed successfully!');
+            setNewPassword('');
         } catch (err) {
             setPwError(err.response?.data?.error || err.message || 'Failed to change password');
         } finally {

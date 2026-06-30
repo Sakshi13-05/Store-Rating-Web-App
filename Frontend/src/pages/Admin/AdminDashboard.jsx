@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
     Users, Store as StoreIcon, Star, Filter, Search, PlusCircle, ArrowUpDown,
-    ArrowUp, ArrowDown, ChevronRight, X, Mail, MapPin, Briefcase, ShieldAlert
+    ArrowUp, ArrowDown, ChevronRight, X, Mail, MapPin, Briefcase, ShieldAlert, Pencil, Trash2
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
-import { getAllUsers, addUser, getOwners } from '../../services/adminService';
-import { addStore, getAllStores } from '../../services/storeService';
+import { getAllUsers, addUser, getOwners, updateUser, deleteUser } from '../../services/adminService';
+import { addStore, getAllStores, updateStore, deleteStore } from '../../services/storeService';
 
 
 export default function AdminDashboard({ onLogout }) {
@@ -36,6 +36,21 @@ export default function AdminDashboard({ onLogout }) {
     const [showAddUser, setShowAddUser] = useState(false);
     const [showAddStore, setShowAddStore] = useState(false);
     const [selectedUserDetail, setSelectedUserDetail] = useState(null);
+
+    // Edit State
+    const [showEditUser, setShowEditUser] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [editUName, setEditUName] = useState('');
+    const [editUEmail, setEditUEmail] = useState('');
+    const [editUAddress, setEditUAddress] = useState('');
+    const [editURole, setEditURole] = useState('user');
+
+    const [showEditStore, setShowEditStore] = useState(false);
+    const [editingStore, setEditingStore] = useState(null);
+    const [editSName, setEditSName] = useState('');
+    const [editSEmail, setEditSEmail] = useState('');
+    const [editSAddress, setEditSAddress] = useState('');
+    const [editSCategory, setEditSCategory] = useState('');
 
     // Form Fields: User
     const [uName, setUName] = useState('');
@@ -412,13 +427,31 @@ export default function AdminDashboard({ onLogout }) {
                                                         </span>
                                                     </td>
                                                     <td style={{ textAlign: 'right' }}>
-                                                        <button
-                                                            onClick={() => setSelectedUserDetail(user)}
-                                                            className="action-view-btn"
-                                                        >
-                                                            <span>View Details</span>
-                                                            <ChevronRight style={{ height: '14px', width: '14px' }} />
-                                                        </button>
+                                                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                                                            <button
+                                                                onClick={() => setSelectedUserDetail(user)}
+                                                                className="action-view-btn"
+                                                            >
+                                                                <span>View</span>
+                                                                <ChevronRight style={{ height: '14px', width: '14px' }} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => openEditUser(user)}
+                                                                className="action-view-btn"
+                                                                style={{ background: 'var(--color-amber-50)', color: 'var(--color-amber-700)', borderColor: 'var(--color-amber-200)' }}
+                                                                title="Edit user"
+                                                            >
+                                                                <Pencil style={{ height: '12px', width: '12px' }} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteUser(user)}
+                                                                className="action-view-btn"
+                                                                style={{ background: '#fef2f2', color: '#dc2626', borderColor: '#fecaca' }}
+                                                                title="Delete user"
+                                                            >
+                                                                <Trash2 style={{ height: '12px', width: '12px' }} />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -467,6 +500,7 @@ export default function AdminDashboard({ onLogout }) {
                                             <th onClick={() => toggleStoreSort('overallRating')} className="sortable">
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>Rating {getSortIcon('overallRating', storeSortField, storeSortOrder)}</div>
                                             </th>
+                                            <th style={{ textAlign: 'right' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -518,6 +552,27 @@ export default function AdminDashboard({ onLogout }) {
                                                             <Star className="star-filled" style={{ height: '16px', width: '16px' }} />
                                                             <span className="admin-table-rating-val">{store.overallRating}</span>
                                                             <span className="admin-table-rating-reviews">({store.ratingCount})</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right' }}>
+                                                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                                                            <button
+                                                                onClick={() => openEditStore(store)}
+                                                                className="action-view-btn"
+                                                                style={{ background: 'var(--color-amber-50)', color: 'var(--color-amber-700)', borderColor: 'var(--color-amber-200)' }}
+                                                                title="Edit store"
+                                                            >
+                                                                <Pencil style={{ height: '12px', width: '12px' }} />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteStore(store)}
+                                                                className="action-view-btn"
+                                                                style={{ background: 'var(--color-red-50,#fef2f2)', color: '#dc2626', borderColor: '#fecaca' }}
+                                                                title="Delete store"
+                                                            >
+                                                                <Trash2 style={{ height: '12px', width: '12px' }} />
+                                                            </button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -830,6 +885,93 @@ export default function AdminDashboard({ onLogout }) {
                                     className="signup-submit-btn"
                                 >
                                     {loading ? 'Creating...' : 'Register Store'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+                {/* MODAL: Edit User Form */}
+                {showEditUser && editingUser && (
+                    <div className="modal-overlay">
+                        <div className="modal-container wide">
+                            <button onClick={() => { setShowEditUser(false); setFormError(null); }} className="modal-close-btn">
+                                <X style={{ height: '20px', width: '20px' }} />
+                            </button>
+                            <h3 className="user-detail-title" style={{ marginBottom: '6px' }}>Edit User</h3>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-slate-500)', marginBottom: '16px' }}>Update credentials for <strong>{editingUser.name}</strong></p>
+
+                            {formError && <div className="signup-alert error" style={{ marginBottom: '16px' }}><ShieldAlert className="signup-alert-icon" /><span>{formError}</span></div>}
+                            {formSuccess && <div className="signup-alert success" style={{ marginBottom: '16px' }}><span>{formSuccess}</span></div>}
+
+                            <form onSubmit={handleEditUser} className="signup-form">
+                                <div className="form-group">
+                                    <label className="form-label">Full Name (20 - 60 chars)</label>
+                                    <input type="text" value={editUName} onChange={(e) => setEditUName(e.target.value)} className="form-input" required />
+                                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--color-slate-400)', marginTop: '4px', display: 'block' }}>{editUName.length} characters (20-60)</span>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Email Address</label>
+                                    <input type="email" value={editUEmail} onChange={(e) => setEditUEmail(e.target.value)} className="form-input" required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Physical Address</label>
+                                    <textarea value={editUAddress} onChange={(e) => setEditUAddress(e.target.value)} rows={2} className="form-input" required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">System Role</label>
+                                    <select value={editURole} onChange={(e) => setEditURole(e.target.value)} className="category-select-dropdown" style={{ height: '42px' }}>
+                                        <option value="user">Normal User</option>
+                                        <option value="owner">Store Owner</option>
+                                        <option value="admin">System Administrator</option>
+                                    </select>
+                                </div>
+                                <button type="submit" disabled={loading} className="signup-submit-btn">
+                                    {loading ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODAL: Edit Store Form */}
+                {showEditStore && editingStore && (
+                    <div className="modal-overlay">
+                        <div className="modal-container wide">
+                            <button onClick={() => { setShowEditStore(false); setFormError(null); }} className="modal-close-btn">
+                                <X style={{ height: '20px', width: '20px' }} />
+                            </button>
+                            <h3 className="user-detail-title" style={{ marginBottom: '6px' }}>Edit Store</h3>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-slate-500)', marginBottom: '16px' }}>Update information for <strong>{editingStore.name}</strong></p>
+
+                            {formError && <div className="signup-alert error" style={{ marginBottom: '16px' }}><ShieldAlert className="signup-alert-icon" /><span>{formError}</span></div>}
+                            {formSuccess && <div className="signup-alert success" style={{ marginBottom: '16px' }}><span>{formSuccess}</span></div>}
+
+                            <form onSubmit={handleEditStore} className="signup-form">
+                                <div className="form-group">
+                                    <label className="form-label">Store Name</label>
+                                    <input type="text" value={editSName} onChange={(e) => setEditSName(e.target.value)} className="form-input" required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Business Email</label>
+                                    <input type="email" value={editSEmail} onChange={(e) => setEditSEmail(e.target.value)} className="form-input" required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Physical Address</label>
+                                    <textarea value={editSAddress} onChange={(e) => setEditSAddress(e.target.value)} rows={2} className="form-input" required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Business Category</label>
+                                    <select value={editSCategory} onChange={(e) => setEditSCategory(e.target.value)} className="category-select-dropdown" style={{ height: '42px' }}>
+                                        <option value="Lifestyle & Home">Lifestyle &amp; Home</option>
+                                        <option value="Coffee & Specialty">Coffee &amp; Specialty</option>
+                                        <option value="Plants & Wellness">Plants &amp; Wellness</option>
+                                        <option value="Art & Design">Art &amp; Design</option>
+                                        <option value="Boutiques & Apparel">Boutiques &amp; Apparel</option>
+                                        <option value="Organic Grocers">Organic Grocers</option>
+                                    </select>
+                                </div>
+                                <button type="submit" disabled={loading} className="signup-submit-btn">
+                                    {loading ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </form>
                         </div>

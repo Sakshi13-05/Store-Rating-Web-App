@@ -105,9 +105,12 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
                 throw new Error('Address must be at most 400 characters long.');
             }
 
-            const res = await fetch('/api/user/profile', {
+            const res = await fetch('http://localhost:5000/api/user/profile', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify({
                     userId: currentUser.id,
                     name: profileName,
@@ -141,9 +144,12 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
                 throw new Error('Password does not satisfy all validation rules.');
             }
 
-            const res = await fetch('/api/auth/change-password', {
+            const res = await fetch('http://localhost:5000/api/user/change-password', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify({
                     userId: currentUser.id,
                     password: newPassword,

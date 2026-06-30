@@ -25,8 +25,13 @@ export default function App() {
   }, []);
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
-    localStorage.setItem('ratenest_session_user', JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user));
     setCurrentTab('dashboard');
+  };
+
+  const handleUpdateUser = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const handleLogout = () => {
@@ -80,8 +85,8 @@ export default function App() {
         ) : currentUser ? (
           <>
             {currentUser.role === 'admin' && <AdminDashboard onLogout={handleLogout} />}
-            {currentUser.role === 'user' && <UserDashboard currentUser={currentUser} onLogout={handleLogout} />}
-            {currentUser.role === 'owner' && <OwnerDashboard currentUser={currentUser} onLogout={handleLogout} />}
+            {currentUser.role === 'user' && <UserDashboard currentUser={currentUser} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
+            {currentUser.role === 'owner' && <OwnerDashboard currentUser={currentUser} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />}
           </>
         ) : (
           // Fallback if they are on dashboard view but not logged in

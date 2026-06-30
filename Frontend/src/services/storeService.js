@@ -15,3 +15,11 @@ export const assignStoreOwner = (storeId, ownerId) => {
         ownerId,
     });
 };
+
+export const updateStore = (id, storeData) => {
+    return api.put(`/stores/${id}`, storeData);
+};
+
+export const deleteStore = (id) => {
+    return api.delete(`/stores/${id}`);
+};

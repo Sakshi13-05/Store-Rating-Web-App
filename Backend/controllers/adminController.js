@@ -147,6 +147,34 @@ const getOwners = (req, res) => {
     });
 
 };
+const updateUser = (req, res) => {
+    const { id } = req.params;
+    const { name, email, address, role } = req.body;
+
+    if (!name || !email || !address || !role) {
+        return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    const query = 'UPDATE users SET name = ?, email = ?, address = ?, role = ? WHERE id = ?';
+    db.query(query, [name, email, address, role, id], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: 'User updated successfully.' });
+    });
+};
+
+const deleteUser = (req, res) => {
+    const { id } = req.params;
+
+    // Remove ratings by this user first to maintain referential integrity
+    db.query('DELETE FROM ratings WHERE user_id = ?', [id], (err) => {
+        if (err) return res.status(500).json(err);
+        db.query('DELETE FROM users WHERE id = ?', [id], (err2) => {
+            if (err2) return res.status(500).json(err2);
+            res.json({ message: 'User deleted successfully.' });
+        });
+    });
+};
+
 module.exports = {
-    getDashboardStats, getAllUsers, addUser, getOwners,
+    getDashboardStats, getAllUsers, addUser, getOwners, updateUser, deleteUser,
 };

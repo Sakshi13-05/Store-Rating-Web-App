@@ -1,10 +1,9 @@
 import api from "./api";
 
-// Dashboard Summary
+// Dashboard Summary (also used by getStore below)
 export const getOwnerDashboard = () => {
     return api.get("/owner/dashboard").then(res => res.data);
 };
-
 
 export const getOwnerRatings = (
     search = "",
@@ -15,9 +14,31 @@ export const getOwnerRatings = (
     ).then(res => res.data);
 };
 
-// Stubs for future backend endpoints
-export const getStore = () => Promise.resolve(null);
+// My Store — reuses dashboard data (same endpoint, shaped as store object)
+export const getStore = () => {
+    return api.get("/owner/dashboard").then(res => ({
+        name: res.data.storeName,
+        email: res.data.email || '',
+        category: res.data.category,
+        address: res.data.address,
+    }));
+};
+
 export const getRatings = (search, sort) => getOwnerRatings(search, sort);
-export const getRatingSummary = () => Promise.resolve({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
-export const updateProfile = () => Promise.resolve({ success: false });
-export const changePassword = () => Promise.resolve({ success: false });
+
+// Rating summary is embedded in dashboard distribution field
+export const getRatingSummary = () => {
+    return api.get("/owner/dashboard").then(res => res.data.distribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
+};
+
+// Update owner profile (name + address)
+export const updateProfile = (userId, data) => {
+    return api.put("/user/profile", { userId, name: data.name, address: data.address })
+        .then(res => res.data);
+};
+
+// Change password
+export const changePassword = (userId, data) => {
+    return api.post("/user/change-password", { userId, password: data.password })
+        .then(res => res.data);
+};

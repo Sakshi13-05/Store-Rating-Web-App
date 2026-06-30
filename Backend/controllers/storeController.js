@@ -139,4 +139,32 @@ const assignStoreOwner = (req, res) => {
     });
 
 };
-module.exports = { addStore, getAllStores, assignStoreOwner };
+const updateStore = (req, res) => {
+    const { id } = req.params;
+    const { name, email, address, category } = req.body;
+
+    if (!name || !email || !address || !category) {
+        return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    const query = 'UPDATE stores SET name = ?, email = ?, address = ?, category = ? WHERE id = ?';
+    db.query(query, [name, email, address, category, id], (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: 'Store updated successfully.' });
+    });
+};
+
+const deleteStore = (req, res) => {
+    const { id } = req.params;
+
+    // Delete ratings first to maintain referential integrity
+    db.query('DELETE FROM ratings WHERE store_id = ?', [id], (err) => {
+        if (err) return res.status(500).json(err);
+        db.query('DELETE FROM stores WHERE id = ?', [id], (err2) => {
+            if (err2) return res.status(500).json(err2);
+            res.json({ message: 'Store deleted successfully.' });
+        });
+    });
+};
+
+module.exports = { addStore, getAllStores, assignStoreOwner, updateStore, deleteStore };
