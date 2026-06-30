@@ -53,32 +53,59 @@ const addStore = (req, res) => {
 
 const getAllStores = (req, res) => {
 
-    const { search = "", category = "all" } = req.query;
+    const { search = "", category = "all", currentUserId } = req.query;
+
+    // Build the user-rating subquery only when a userId is provided
+    const userRatingJoin = currentUserId
+        ? `LEFT JOIN ratings AS ur ON ur.store_id = s.id AND ur.user_id = ?`
+        : "";
+
+    const userRatingSelect = currentUserId
+        ? `, ur.rating AS userRating`
+        : `, NULL AS userRating`;
 
     let query = `
-        SELECT *
-        FROM stores
+        SELECT
+            s.*,
+            ROUND(COALESCE(AVG(r.rating), 0), 1) AS overallRating,
+            COUNT(r.id) AS ratingCount
+            ${userRatingSelect}
+        FROM stores s
+        LEFT JOIN ratings r ON r.store_id = s.id
+        ${userRatingJoin}
         WHERE
-        (name LIKE ? OR email LIKE ? OR address LIKE ?)
+        (s.name LIKE ? OR s.email LIKE ? OR s.address LIKE ?)
     `;
 
-    const params = [
-        `%${search}%`,
-        `%${search}%`,
-        `%${search}%`
-    ];
+    const params = [];
+
+    // The user-rating JOIN param must come before the WHERE params
+    if (currentUserId) {
+        params.push(currentUserId);
+    }
+
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
 
     if (category !== "all") {
-        query += " AND category = ?";
+        query += " AND s.category = ?";
         params.push(category);
     }
 
-    query += " ORDER BY created_at DESC";
+    query += " GROUP BY s.id ORDER BY s.created_at DESC";
 
     db.query(query, params, (err, result) => {
         if (err) return res.status(500).json(err);
 
-        res.json(result);
+        // Normalise: convert null userRating to null (not 0) so frontend
+        // can correctly distinguish "not rated" from "rated 0"
+        const rows = result.map((store) => ({
+            ...store,
+            overallRating: store.overallRating ? Number(store.overallRating) : 0,
+            ratingCount: Number(store.ratingCount),
+            userRating: store.userRating !== null ? Number(store.userRating) : null,
+        }));
+
+        res.json(rows);
     });
 };
 const assignStoreOwner = (req, res) => {
