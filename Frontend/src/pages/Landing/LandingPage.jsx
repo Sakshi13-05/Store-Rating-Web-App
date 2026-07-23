@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import StoreCard from '../../components/StoreCard';
 import './LandingPage.css';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 
 export default function LandingPage({ onOpenAuth, onSelectStoreToRate }) {
     const [stores, setStores] = useState([]);
@@ -17,7 +19,7 @@ export default function LandingPage({ onOpenAuth, onSelectStoreToRate }) {
                 category: selectedCategory,
             }).toString();
 
-            const res = await fetch(`http://127.0.0.1:5000/api/stores?${q}`);
+            const res = await fetch(`${API_BASE_URL}/api/stores?${q}`);
             const data = await res.json();
             if (res.ok) {
                 setStores(data);

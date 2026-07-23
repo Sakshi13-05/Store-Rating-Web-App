@@ -7,6 +7,8 @@ import './AdminDashboard.css';
 import { getDashboardStats } from '../../services/adminService';
 import { getAllUsers, addUser, getOwners, updateUser, deleteUser } from '../../services/adminService';
 import { addStore, getAllStores, updateStore, deleteStore } from '../../services/storeService';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 
 
 export default function AdminDashboard({ onLogout }) {
@@ -91,7 +93,7 @@ export default function AdminDashboard({ onLogout }) {
     const handleAssignOwner = async (storeId, ownerId) => {
         try {
             // Using direct fetch to match your backend API assignment path (adjust if necessary)
-            const res = await fetch(`/api/stores/${storeId}/owner`, {
+            const res = await fetch(`${API_BASE_URL}/api/stores/${storeId}/owner`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ownerId })

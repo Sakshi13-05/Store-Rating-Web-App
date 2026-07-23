@@ -6,6 +6,8 @@ import {
     BarChart3, HelpCircle, UserCheck, ShieldAlert
 } from 'lucide-react';
 import './UserDashboard.css';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 
 export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
     // Navigation & UI Tab State
@@ -63,7 +65,7 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
             setLoading(true);
             setError(null);
             // We load stores with currentUserId so it populates "userRating" for each store
-            const res = await fetch(`/api/stores?currentUserId=${currentUser.id}`);
+            const res = await fetch(`${API_BASE_URL}/api/stores?currentUserId=${currentUser.id}`);
             const data = await res.json();
             if (res.ok) {
                 setStores(data);
@@ -105,7 +107,7 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
                 throw new Error('Address must be at most 400 characters long.');
             }
 
-            const res = await fetch('http://localhost:5000/api/user/profile', {
+            const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -144,7 +146,7 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
                 throw new Error('Password does not satisfy all validation rules.');
             }
 
-            const res = await fetch('http://localhost:5000/api/user/change-password', {
+            const res = await fetch(`${API_BASE_URL}/api/user/change-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -182,7 +184,7 @@ export default function UserDashboard({ currentUser, onLogout, onUpdateUser }) {
         setRatingSubmitting(true);
 
         try {
-            const res = await fetch('/api/user/rating', {
+            const res = await fetch(`${API_BASE_URL}/api/user/rating`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

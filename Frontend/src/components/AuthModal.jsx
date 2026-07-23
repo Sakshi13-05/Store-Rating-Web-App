@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import './AuthModal.css';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 
 export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess }) {
     const [view, setView] = useState(initialView);
@@ -52,7 +54,7 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
                     throw new Error('Please enter a valid email address');
                 }
 
-                const res = await fetch('http://127.0.0.1:5000/api/auth/signup', {
+                const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, address, password }),
@@ -69,7 +71,7 @@ export default function AuthModal({ isOpen, onClose, initialView, onAuthSuccess 
                 }, 1200);
             } else {
                 // Sign In
-                const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
